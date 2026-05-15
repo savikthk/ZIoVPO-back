@@ -1,0 +1,484 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+    "name": "RBPO Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "1) Выполните **Login as ADMIN** — токен сохранится в accessToken.\n2) **Signatures**: сначала **Create signature** — в ответе будет id, он сохранится в signatureId. После этого работают Update, Delete, Get by IDs, Get history, Get audit.\n3) **Signatures files** (задание 6): только ADMIN — загрузка файла в MinIO и presigned URL; нужен запущенный MinIO (`docker compose up`).\n4) **Signatures binary**: после логина USER/ADMIN — бинарная выгрузка multipart.\n5) baseUrl по умолчанию http://localhost:8081."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "username", "value": "testuser" },
+    { "key": "password", "value": "Test123!@#" },
+    { "key": "activationKey", "value": "" },
+    { "key": "deviceMac", "value": "AA:BB:CC:DD:EE:01" },
+    { "key": "productId", "value": "1" },
+    { "key": "signatureId", "value": "00000000-0000-0000-0000-000000000001" },
+    { "key": "binarySince", "value": "2020-01-01T00:00:00Z" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "_postman_id": "b2c3d4e5-f6a7-5b6c-9d0e-1f2a3b4c5d6e",
+      "item": [
+        {
+          "name": "Register",
+          "_postman_id": "c3d4e5f6-a7b8-6c7d-0e1f-2a3b4c5d6e7f",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"Test123!@#\",\n  \"email\": \"newuser@example.com\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "_postman_id": "d4e5f6a7-b8c9-7d8e-1f2a-3b4c5d6e7f8a",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var j = pm.response.json();",
+                  "if (j.accessToken) pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login as ADMIN",
+          "_postman_id": "e5f6a7b8-c9d0-8e9f-2a3b-4c5d6e7f8a9b",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('username', 'admin');",
+                  "pm.collectionVariables.set('password', 'Admin123!@#');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var j = pm.response.json();",
+                  "if (j.accessToken) pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!@#\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login as USER",
+          "_postman_id": "f6a7b8c9-d0e1-9f0a-3b4c-5d6e7f8a9b0c",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var j = pm.response.json();",
+                  "if (j.accessToken) pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Test123!@#\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Refresh",
+          "_postman_id": "a7b8c9d0-e1f2-0a1b-4c5d-6e7f8a9b0c1d",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var j = pm.response.json();",
+                  "if (j.accessToken) pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/refresh"
+          }
+        },
+        {
+          "name": "Me",
+          "_postman_id": "b8c9d0e1-f2a3-1b2c-5d6e-7f8a9b0c1d2e",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        },
+        {
+          "name": "Logout (clear token)",
+          "_postman_id": "c9d0e1f2-a3b4-2c3d-6e7f-8a9b0c1d2e3f",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('accessToken', '');",
+                  "pm.collectionVariables.set('refreshToken', '');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Licenses",
+      "_postman_id": "d0e1f2a3-b4c5-3d4e-7f8a-9b0c1d2e3f4a",
+      "item": [
+        {
+          "name": "Create License",
+          "_postman_id": "e1f2a3b4-c5d6-4e5f-8a9b-0c1d2e3f4a5b",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var j = pm.response.json();",
+                  "if (j.code) pm.collectionVariables.set('activationKey', j.code);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"typeId\": 1,\n  \"ownerId\": 2,\n  \"deviceCount\": 2,\n  \"description\": \"Test license\"\n}"
+            },
+            "url": "{{baseUrl}}/api/licenses",
+            "description": "Только ADMIN. В body не передавать id и code — их генерирует сервер. После ответа code сохраняется в переменную activationKey."
+          }
+        },
+        {
+          "name": "Activate License",
+          "_postman_id": "f2a3b4c5-d6e7-5f6a-9b0c-1d2e3f4a5b6c",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activationKey\": \"{{activationKey}}\",\n  \"deviceMac\": \"{{deviceMac}}\",\n  \"deviceName\": \"UserPC\"\n}"
+            },
+            "url": "{{baseUrl}}/api/licenses/activate"
+          }
+        },
+        {
+          "name": "Check License",
+          "_postman_id": "a3b4c5d6-e7f8-6a7b-0c1d-2e3f4a5b6c7d",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceMac\": \"{{deviceMac}}\",\n  \"productId\": {{productId}}\n}"
+            },
+            "url": "{{baseUrl}}/api/licenses/check"
+          }
+        },
+        {
+          "name": "Renew License",
+          "_postman_id": "b4c5d6e7-f8a9-7b8c-1d2e-3f4a5b6c7d8e",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activationKey\": \"{{activationKey}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/licenses/renew"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signatures",
+      "_postman_id": "e7f8a9b0-c1d2-8e9f-0a1b-2c3d4e5f6a7b",
+      "description": "Сначала **Login as ADMIN** (в папке Auth), затем **Create signature** — после создания переменная signatureId подставится автоматически. Остальные запросы (Update, Delete, Get history, Get audit) используют этот id.",
+      "item": [
+        {
+          "name": "Get full database",
+          "_postman_id": "f8a9b0c1-d2e3-9f0a-1b2c-3d4e5f6a7b8c",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "url": "{{baseUrl}}/api/signatures",
+            "description": "Полная база — только ACTUAL. USER/ADMIN."
+          }
+        },
+        {
+          "name": "Get increment",
+          "_postman_id": "a9b0c1d2-e3f4-0a1b-2c3d-4e5f6a7b8c9d",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "url": "{{baseUrl}}/api/signatures/increment?since=2020-01-01T00:00:00Z",
+            "description": "Инкремент: записи с updatedAt > since (включая DELETED). Параметр since обязателен (ISO-8601)."
+          }
+        },
+        {
+          "name": "Get by IDs",
+          "_postman_id": "b0c1d2e3-f4a5-1b2c-3d4e-5f6a7b8c9d0e",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"{{signatureId}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/signatures/by-ids",
+            "description": "Сигнатуры по списку UUID. Подставьте signatureId или несколько uuid в массив ids."
+          }
+        },
+        {
+          "name": "Create signature",
+          "_postman_id": "c1d2e3f4-a5b6-2c3d-4e5f-6a7b8c9d0e1f",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('signatureId', j.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threatName\": \"Test.Malware\",\n  \"firstBytesHex\": \"4d5a\",\n  \"remainderHashHex\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n  \"remainderLength\": 0,\n  \"fileType\": \"exe\",\n  \"offsetStart\": 0,\n  \"offsetEnd\": 2\n}"
+            },
+            "url": "{{baseUrl}}/api/signatures",
+            "description": "Создание сигнатуры. Только ADMIN. После ответа id сохраняется в signatureId."
+          }
+        },
+        {
+          "name": "Update signature",
+          "_postman_id": "d2e3f4a5-b6c7-3d4e-5f6a-7b8c9d0e1f2a",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threatName\": \"Test.Malware.Updated\",\n  \"firstBytesHex\": \"4d5a90\",\n  \"remainderHashHex\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n  \"remainderLength\": 0,\n  \"fileType\": \"exe\",\n  \"offsetStart\": 0,\n  \"offsetEnd\": 3\n}"
+            },
+            "url": "{{baseUrl}}/api/signatures/{{signatureId}}",
+            "description": "Обновление сигнатуры. Только ADMIN. Использует signatureId из переменной."
+          }
+        },
+        {
+          "name": "Delete signature",
+          "_postman_id": "e3f4a5b6-c7d8-4e5f-6a7b-8c9d0e1f2a3b",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "url": "{{baseUrl}}/api/signatures/{{signatureId}}",
+            "description": "Логическое удаление (status = DELETED). Только ADMIN. 204 No Content."
+          }
+        },
+        {
+          "name": "Get history",
+          "_postman_id": "f4a5b6c7-d8e9-5f6a-7b8c-9d0e1f2a3b4c",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "url": "{{baseUrl}}/api/signatures/{{signatureId}}/history",
+            "description": "История версий по signatureId. Только ADMIN."
+          }
+        },
+        {
+          "name": "Get audit",
+          "_postman_id": "a5b6c7d8-e9f0-6a7b-8c9d-0e1f2a3b4c5d",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "url": "{{baseUrl}}/api/signatures/{{signatureId}}/audit",
+            "description": "Аудит действий по signatureId. Только ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signatures files",
+      "_postman_id": "f0a1b2c3-d4e5-6f7a-8b9c-0d1e2f3a4b5c",
+      "description": "Задание 6 (MinIO): только ADMIN. Сначала **Login as ADMIN**. Убедитесь, что MinIO запущен и заданы переменные приложения MINIO_* . В Upload выберите файл в поле **file** (form-data).",
+      "item": [
+        {
+          "name": "Upload file (signature)",
+          "_postman_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  try { var j = pm.response.json(); if (j.id) pm.collectionVariables.set('signatureId', j.id); } catch (e) {}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" } ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "threatName", "type": "text", "value": "Sample.From.File", "disabled": true }
+              ]
+            },
+            "url": "{{baseUrl}}/api/signatures/files/upload",
+            "description": "multipart/form-data: поле **file** (обязательно). **threatName** — опционально (иначе из имени файла)."
+          }
+        },
+        {
+          "name": "Presigned URLs by IDs",
+          "_postman_id": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"{{signatureId}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/signatures/files/presigned-urls",
+            "description": "Список объектов { signatureId, presignedUrl }; URL null, если файла в хранилище нет."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signatures binary",
+      "_postman_id": "b6c7d8e9-f0a1-7b8c-9d0e-1f2a3b4c5d6e",
+      "description": "Задание 5: бинарная выдача сигнатур. Ответ `200` с `Content-Type: multipart/mixed`: части **manifest.bin** и **data.bin** (application/octet-stream). Нужен Bearer-токен (USER или ADMIN).",
+      "item": [
+        {
+          "name": "GET full (multipart/mixed)",
+          "_postman_id": "c7d8e9f0-a1b2-8c9d-0e1f-2a3b4c5d6e7f",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Accept", "value": "multipart/mixed,*/*" }
+            ],
+            "url": "{{baseUrl}}/api/binary/signatures/full",
+            "description": "Полная выгрузка только ACTUAL. Тело ответа — не JSON, а два бинарных файла в multipart."
+          }
+        },
+        {
+          "name": "GET increment (multipart/mixed)",
+          "_postman_id": "d8e9f0a1-b2c3-9d0e-1f2a-3b4c5d6e7f8a",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Accept", "value": "multipart/mixed,*/*" }
+            ],
+            "url": "{{baseUrl}}/api/binary/signatures/increment?since={{binarySince}}",
+            "description": "Инкремент: записи с updatedAt > since (включая DELETED). Параметр since обязателен (ISO-8601). Меняйте переменную binarySince."
+          }
+        },
+        {
+          "name": "POST by-ids (multipart/mixed)",
+          "_postman_id": "e9f0a1b2-c3d4-0e1f-2a3b-4c5d6e7f8a9b",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Accept", "value": "multipart/mixed,*/*" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"{{signatureId}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/binary/signatures/by-ids",
+            "description": "Бинарная выдача по списку UUID. Возвращаются только найденные записи."
+          }
+        }
+      ]
+    }
+  ]
+}
